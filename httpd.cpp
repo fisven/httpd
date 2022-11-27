@@ -79,7 +79,7 @@ int main(void) {
             error_die("accept error ...");
         }
         DWORD threadId = 0;
-        CreateThreadl(0, 0, accept_request, (void*)client_sock, 0, &threadId);
+        CreateThread(0, 0, accept_request, (void*)client_sock, 0, &threadId);
         
     }
 

@@ -1,8 +1,6 @@
-#include <iostream>
 #include <stdio.h>
-
 // 网络通信相关
-#include <WinSock2.h>
+#include <winsock2.h>
 #pragma comment(lib, "WS2_32.lib")
 
 void error_die(const char* str) {
@@ -10,7 +8,7 @@ void error_die(const char* str) {
     exit(1);
 }
 
-int startup(unsigned short *port) {
+int startup(unsigned short* port) {
     WSADATA data;
     int ret = WSAStartup(MAKEWORD(1, 1), &data);
     if(ret) {
@@ -37,10 +35,9 @@ int startup(unsigned short *port) {
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     // 绑定套接字.
-    ret = bind(server_socket, (struct sockaddr*)&server_addr, sizeof(&server_addr)); // 引用.
-    if(ret < 0) {
-        error_die("bind error ..");
-    }
+    if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+		error_die("bind error ...");
+	}
 
     // 动态分配端口.
     int nameLen = sizeof(server_addr);
@@ -49,7 +46,7 @@ int startup(unsigned short *port) {
         if(temp < 0) {
             error_die("getsockname error .. ");
         }
-        *port = server_addr.sin_port;
+        *port = ntohs(server_addr.sin_port);
     }
 
     // 监听队列.
@@ -61,8 +58,30 @@ int startup(unsigned short *port) {
     return server_socket;
 }
 
-int main() {
+// 处理用户请求的线程函数.
+DWORD WINAPI accept_request(LPVOID arg) {
+    
+    return 0;
+}
+
+int main(void) {
     unsigned short port = 80;
     int server_sock = startup(&port);
     printf("server begin ... %d", port);
+
+    struct sockaddr_in client_addr;
+    int client_addr_len = sizeof(client_addr);
+
+    while(1) {
+        // 阻塞等待式.
+        int client_sock = accept(server_sock, (struct sockaddr*)&client_addr, &client_addr_len);
+        if(client_sock == -1) {
+            error_die("accept error ...");
+        }
+        DWORD threadId = 0;
+        CreateThreadl(0, 0, accept_request, (void*)client_sock, 0, &threadId);
+        
+    }
+
+    closesocket(server_socket);
 }
